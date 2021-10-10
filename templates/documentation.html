@@ -64,39 +64,39 @@
 		<!-- Main Content -->
 		<div class="container-fluid">
 
-			<!-- PRODUCT -->
+			<!-- TODO -->
 			<div class="row mt-4 justify-content-left">
 				<div class="col mx-3">
 					<div class="card">
 						<div class="card-body">
-							<h5 class="card-title">Product CRUD</h5>
+							<h5 class="card-title">Todos CRUD</h5>
 							<h6 class="card-subtitle mb-2 text-muted">Requires JWT Token auth as admin</h6>
-							<p><span style='font-weight: 675;'>GET /api/admin/products</span> Return JSON with all products. <a href="https://flask-shop-application-api.herokuapp.com/api/admin/products" class="card-link">https://flask-shop-application-api.herokuapp.com/api/admin/products</a></p>
-							<p style="margin-bottom: 0;"><span style='font-weight: 675;'>POST /api/admin/products</span> Post new product from JSON <a href="https://flask-shop-application-api.herokuapp.com/api/admin/products" class="card-link">https://flask-shop-application-api.herokuapp.com/api/admin/products</a></p>
-							<p style="font-style: italic;">{"product_name": "product_name", "product_description": "product_description", "price": "500", "stock": "stock", "images_url": "images_url", "category_id": "category_id"}</p> 
-							<p><span style='font-weight: 675;'>GET /api/admin/product/id</span> Return JSON selected product. <a href="https://flask-shop-application-api.herokuapp.com/api/admin/product/id" class="card-link">https://flask-shop-application-api.herokuapp.com/api/admin/product/id</a></p>
-							<p style="margin-bottom: 0;"><span style='font-weight: 675;'>PUT /api/admin/product/id</span> Update selected product from JSON <a href="https://flask-shop-application-api.herokuapp.com/api/admin/product/id" class="card-link">https://flask-shop-application-api.herokuapp.com/api/admin/product/id</a></p>
-							<p style="font-style: italic;">{"product_name": "product_name", "product_description": "product_description", "price": "500", "stock": "stock", "images_url": "images_url", "category_id": "category_id"}</p>
-							<p><span style='font-weight: 675;'>DELETE /api/admin/product/id</span> Delete selected product. <a href="https://flask-shop-application-api.herokuapp.com/api/admin/product/id" class="card-link">https://flask-shop-application-api.herokuapp.com/api/admin/product/id</a></p>
+							<p><span style='font-weight: 675;'>GET /api/todos</span> Return JSON with all todos. <a href="http://127.0.0.1:5000/api/todos" class="card-link">http://127.0.0.1:5000/api/todos</a></p>
+							<p style="margin-bottom: 0;"><span style='font-weight: 675;'>POST /api/todos</span> Post new todo from JSON <a href="http://127.0.0.1:5000/api/todos" class="card-link">http://127.0.0.1:5000/api/todos</a></p>
+							<p style="font-style: italic;">{"todo_description": "todo_description", "completed": "completed", "user_id": "user_id"}</p> 
+							<p><span style='font-weight: 675;'>GET /api/todo/id</span> Return JSON selected todo. <a href="http://127.0.0.1:5000/api/todo/id" class="card-link">http://127.0.0.1:5000/api/todo/id</a></p>
+							<p style="margin-bottom: 0;"><span style='font-weight: 675;'>PUT /api/todo/id</span> Update selected todo from JSON <a href="http://127.0.0.1:5000/api/todo/id" class="card-link">http://127.0.0.1:5000/api/todo/id</a></p>
+							<p style="font-style: italic;">{"todo_description": "todo_description", "completed": "completed", "user_id": "user_id"}</p>
+							<p><span style='font-weight: 675;'>DELETE /api/todo/id</span> Delete selected todo. <a href="http://127.0.0.1:5000/api/todo/id" class="card-link">http://127.0.0.1:5000/api/todo/id</a></p>
 						</div>
 					</div>
 				</div>
 			</div>
 
-			<!-- User -->
+			<!-- USER -->
 			<div class="row mt-4 justify-content-left">
 				<div class="col mx-3">
 					<div class="card">
 						<div class="card-body">
 							<h5 class="card-title">User CRUD</h5>
 							<h6 class="card-subtitle mb-2 text-muted">Requires JWT Token auth as admin</h6>
-							<p><span style='font-weight: 675;'>GET /api/admin/users</span> Return JSON with all users. <a href="https://flask-shop-application-api.herokuapp.com/api/admin/users" class="card-link">https://flask-shop-application-api.herokuapp.com/api/admin/users</a></p>
-							<p style="margin-bottom: 0;"><span style='font-weight: 675;'>POST /api/admin/users</span> Post new user and userdetail from JSON <a href="https://flask-shop-application-api.herokuapp.com/api/admin/users" class="card-link">https://flask-shop-application-api.herokuapp.com/api/admin/users</a></p>
-							<p style="font-style: italic;">{"email": "email", "password": "password", "role": "role", "first_name": "first_name", "last_name": "last_name", "profile_picture": "profile_picture", "address": "address", "city": "city", "state": "state", "postcode": "postcode", "country": "country", "phone": "phone"}</p> 
-							<p><span style='font-weight: 675;'>GET /api/admin/user/id</span> Return JSON selected user. <a href="https://flask-shop-application-api.herokuapp.com/api/admin/user/id" class="card-link">https://flask-shop-application-api.herokuapp.com/api/admin/user/id</a></p>
-							<p style="margin-bottom: 0;"><span style='font-weight: 675;'>PUT /api/admin/user/id</span> Update selected user and userdetail from JSON <a href="https://flask-shop-application-api.herokuapp.com/api/admin/user/id" class="card-link">https://flask-shop-application-api.herokuapp.com/api/admin/user/id</a></p>
-							<p style="font-style: italic;">{"email": "email", "password": "password", "role": "role", "first_name": "first_name", "last_name": "last_name", "profile_picture": "profile_picture", "address": "address", "city": "city", "state": "state", "postcode": "postcode", "country": "country", "phone": "phone"}</p>
-							<p><span style='font-weight: 675;'>DELETE /api/admin/user/id</span> Delete selected user. <a href="https://flask-shop-application-api.herokuapp.com/api/admin/user/id" class="card-link">https://flask-shop-application-api.herokuapp.com/api/admin/user/id</a></p>
+							<p><span style='font-weight: 675;'>GET /api/admin/users</span> Return JSON with all users. <a href="http://127.0.0.1:5000/api/admin/users" class="card-link">http://127.0.0.1:5000/api/admin/users</a></p>
+							<p style="margin-bottom: 0;"><span style='font-weight: 675;'>POST /api/admin/users</span> Post new user and userdetail from JSON <a href="http://127.0.0.1:5000/api/admin/users" class="card-link">http://127.0.0.1:5000/api/admin/users</a></p>
+							<p style="font-style: italic;">{"email": "email", "password": "password", "first_name": "first_name", "last_name": "last_name"}</p> 
+							<p><span style='font-weight: 675;'>GET /api/admin/user/id</span> Return JSON selected user. <a href="http://127.0.0.1:5000/api/admin/user/id" class="card-link">http://127.0.0.1:5000/api/admin/user/id</a></p>
+							<p style="margin-bottom: 0;"><span style='font-weight: 675;'>PUT /api/admin/user/id</span> Update selected user and userdetail from JSON <a href="http://127.0.0.1:5000/api/admin/user/id" class="card-link">http://127.0.0.1:5000/api/admin/user/id</a></p>
+							<p style="font-style: italic;">{"password": "password", "first_name": "first_name", "last_name": "last_name"}</p>
+							<p><span style='font-weight: 675;'>DELETE /api/admin/user/id</span> Delete selected user. <a href="http://127.0.0.1:5000/api/admin/user/id" class="card-link">http://127.0.0.1:5000/api/admin/user/id</a></p>
 						</div>
 					</div>
 				</div>
