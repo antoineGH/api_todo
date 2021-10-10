@@ -63,10 +63,26 @@ class Todo(db.Model):
             'todo_description': self.todo_description,
             'completed': self.completed,
         }
+    
+    @property
+    def serializeCompleted(self):
+        if self.completed:
+            return {
+            'todo_id': self.todo_id,
+            'todo_description': self.todo_description,
+            'completed': self.completed,
+        }
 
-# --- INFO: REACT FUNCTIONS --- 
+    @property
+    def serializeNotCompleted(self):
+        if not self.completed:
+            return {
+            'todo_id': self.todo_id,
+            'todo_description': self.todo_description,
+            'completed': self.completed,
+        }
 
-# CRUD USERS
+# --- INFO: ADMIN FUNCTIONS --- 
 
 def getUsers():
     users = User.query.all()
@@ -129,11 +145,9 @@ def deleteUser(user_id):
         db.session.rollback()
         return jsonify({"message": "Couldn't delete user to DB"}), 400
 
-# CRUD TODOS
-
 def getTodos():
     todos = Todo.query.all()
-    return jsonify(totods=[todo.serialize for todo in todos])
+    return jsonify(todos=[todo.serialize for todo in todos])
 
 def postTodo(todo_description, completed, user_id):
     user = User.query.get(user_id)
@@ -185,7 +199,22 @@ def deleteTodo(todo_id):
         db.session.rollback()
         return jsonify({"message": "Couldn't delete todo to DB"}), 400
 
-# --- INFO: ROUTES ---
+def getTodosUser(user_id):
+    todos = Todo.query.filter_by(user_id=user_id).all()
+    return jsonify(todos=[todo.serialize for todo in todos])
+
+def getTodosCompletedUser(user_id):
+    todos = Todo.query.filter_by(user_id=user_id).all()
+    return jsonify(todos=[todo.serializeCompleted for todo in todos])
+
+def getTodosNotCompletedUser(user_id):
+    todos = Todo.query.filter_by(user_id=user_id).all()
+    return jsonify(todos=[todo.serializeNotCompleted for todo in todos])
+
+
+# --- INFO: USER FUNCTIONS --- 
+
+# --- INFO: ADMIN ROUTES ---
 
 @app.route('/')
 def home():
@@ -234,7 +263,7 @@ def adminUser(user_id):
     if request.method == 'DELETE':
         return deleteUser(user_id)
 
-@app.route('/api/todos', methods=['GET', 'POST'])
+@app.route('/api/admin/todos', methods=['GET', 'POST'])
 def todos():
     if request.method == 'GET':
         return getTodos()
@@ -253,7 +282,7 @@ def todos():
             return jsonify({"message": 'Missing user_id in JSON'})
         return postTodo(todo_description, completed, user_id)
 
-@app.route('/api/todo/<int:todo_id>', methods=['GET', 'PUT', 'DELETE']) 
+@app.route('/api/admin/todo/<int:todo_id>', methods=['GET', 'PUT', 'DELETE']) 
 def todo(todo_id):
     if not todo_id:
         return jsonify({"message": "Missing todo_id in request"}), 404
@@ -273,6 +302,25 @@ def todo(todo_id):
     if request.method == 'DELETE':
         return deleteTodo(todo_id)
 
+@app.route('/api/admin/todo/user/<int:user_id>', methods=['GET'])
+def todosUser(user_id):
+    if not user_id:
+        return jsonify({"message": "Missing user_id in request"}), 404
+    return getTodosUser(user_id)
+
+@app.route('/api/admin/user/completed/<int:user_id>', methods=['GET'])
+def todosUserCompleted(user_id):
+    if not user_id:
+        return jsonify({"message": "Missing user_id in request"}), 404
+    return getTodosCompletedUser(user_id)
+
+@app.route('/api/admin/user/notcompleted/<int:user_id>', methods=['GET'])
+def todosUserNotCompleted(user_id):
+    if not user_id:
+        return jsonify({"message": "Missing user_id in request"}), 404
+    return getTodosNotCompletedUser(user_id)
+
+# --- INFO: USER ROUTES ---
 
 if __name__ == '__main__':
     app.run(debug=True)

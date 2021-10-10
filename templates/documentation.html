@@ -69,7 +69,7 @@
 				<div class="col mx-3">
 					<div class="card">
 						<div class="card-body">
-							<h5 class="card-title">Todos CRUD</h5>
+							<h5 class="card-title">Admin Todos CRUD</h5>
 							<h6 class="card-subtitle mb-2 text-muted">Requires JWT Token auth as admin</h6>
 							<p><span style='font-weight: 675;'>GET /api/todos</span> Return JSON with all todos. <a href="http://127.0.0.1:5000/api/todos" class="card-link">http://127.0.0.1:5000/api/todos</a></p>
 							<p style="margin-bottom: 0;"><span style='font-weight: 675;'>POST /api/todos</span> Post new todo from JSON <a href="http://127.0.0.1:5000/api/todos" class="card-link">http://127.0.0.1:5000/api/todos</a></p>
@@ -78,6 +78,9 @@
 							<p style="margin-bottom: 0;"><span style='font-weight: 675;'>PUT /api/todo/id</span> Update selected todo from JSON <a href="http://127.0.0.1:5000/api/todo/id" class="card-link">http://127.0.0.1:5000/api/todo/id</a></p>
 							<p style="font-style: italic;">{"todo_description": "todo_description", "completed": "completed", "user_id": "user_id"}</p>
 							<p><span style='font-weight: 675;'>DELETE /api/todo/id</span> Delete selected todo. <a href="http://127.0.0.1:5000/api/todo/id" class="card-link">http://127.0.0.1:5000/api/todo/id</a></p>
+							<p><span style='font-weight: 675;'>GET /api/todo/user/user_id</span> Return JSON with all todos for user. <a href="http://127.0.0.1:5000/api/todo/user/user_id" class="card-link">http://127.0.0.1:5000/api/todo/user/user_id</a></p>
+							<p><span style='font-weight: 675;'>GET /api/admin/user/completed/user_id</span> Return JSON with all completed todos for user. <a href="http://127.0.0.1:5000/api/admin/user/completed/user_id" class="card-link">http://127.0.0.1:5000/api/admin/user/completed/user_id</a></p>
+							<p><span style='font-weight: 675;'>GET /api/admin/user/notcompleted/user_id</span> Return JSON with all notcompleted todos for user. <a href="http://127.0.0.1:5000/api/admin/user/notcompleted/user_id" class="card-link">http://127.0.0.1:5000/api/admin/user/notcompleted/user_id</a></p>
 						</div>
 					</div>
 				</div>
@@ -88,7 +91,7 @@
 				<div class="col mx-3">
 					<div class="card">
 						<div class="card-body">
-							<h5 class="card-title">User CRUD</h5>
+							<h5 class="card-title">Admin User CRUD</h5>
 							<h6 class="card-subtitle mb-2 text-muted">Requires JWT Token auth as admin</h6>
 							<p><span style='font-weight: 675;'>GET /api/admin/users</span> Return JSON with all users. <a href="http://127.0.0.1:5000/api/admin/users" class="card-link">http://127.0.0.1:5000/api/admin/users</a></p>
 							<p style="margin-bottom: 0;"><span style='font-weight: 675;'>POST /api/admin/users</span> Post new user and userdetail from JSON <a href="http://127.0.0.1:5000/api/admin/users" class="card-link">http://127.0.0.1:5000/api/admin/users</a></p>
