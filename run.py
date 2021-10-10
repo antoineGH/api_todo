@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from flask import Flask, jsonify, abort, make_response, request, render_template, url_for, redirect
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
@@ -66,12 +66,52 @@ class Todo(db.Model):
 
 # --- INFO: REACT FUNCTIONS --- 
 
+def getUsers():
+    users = User.query.all()
+    return jsonify(users=[user.serialize for user in users])
+
+def postUser(email, password, first_name, last_name):
+    userExisting = User.query.filter_by(email=email).first()
+    if userExisting:
+        return jsonify({'message': 'User already exists'}), 400
+    hashedPassword = bcrypt.generate_password_hash(password).decode('utf-8')
+    user = User(email=email, password=hashedPassword, first_name=first_name, last_name=last_name)
+    db.session.add(user)
+    try:
+        db.session.commit()
+        return jsonify(user=user.serialize)
+    except:
+        db.session.rollback()
+        return jsonify({"message": "Couln't add user to DB"}), 400
+
 # --- INFO: ROUTES ---
 
 @app.route('/')
 def home():
     return render_template('documentation.html', title='Documentation')
 
+@app.route('/api/admin/users', methods=['GET', 'POST'])
+def adminUsers():
+    if request.method == 'GET':
+        return getUsers()
+    if request.method == 'POST':
+        if not request.is_json:
+            return jsonify({"message": "Missing JSON in request"}), 400
+        content = request.get_json(force=True)
+        email = content.get("email", None)
+        password = content.get("password", None)
+        first_name = content.get("first_name", None)
+        last_name = content.get("last_name", None)
+        if not email: 
+            return jsonify({"message": 'Missing email in JSON'})
+        if not password: 
+            return jsonify({"message": 'Missing password in JSON'})
+        if not first_name: 
+            return jsonify({"message": 'Missing first name in JSON'})
+        if not last_name: 
+            return jsonify({"message": 'Missing last name in JSON'})
+        return postUser(email, password, first_name, last_name)
+    
 
 if __name__ == '__main__':
     app.run(debug=True)
