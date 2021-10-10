@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+		<!-- Imports -->
+		<link
+			rel="stylesheet"
+			href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+			integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+			crossorigin="anonymous"
+		/>
+
+		{% if title %}
+		<title>{{ title }} - Todo API</title>
+		{% else %}
+		<title>Todo API</title>
+		{% endif %}
+	</head>
+	<body>
+		<!-- Navigation -->
+		<nav class="navbar navbar-expand-lg navbar-light bg-light">
+			<a class="navbar-brand" href="#">Todo API - Documentation</a>
+			<button
+				class="navbar-toggler"
+				type="button"
+				data-toggle="collapse"
+				data-target="#navbarSupportedContent"
+				aria-controls="navbarSupportedContent"
+				aria-expanded="false"
+				aria-label="Toggle navigation"
+			>
+				<span class="navbar-toggler-icon"></span>
+			</button>
+
+			<div class="collapse navbar-collapse" id="navbarSupportedContent">
+				<ul class="navbar-nav mr-auto">
+					<li class="nav-item">
+						<a class="nav-link" href="#">GET</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="#">POST</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="#">PUT</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="#">DELETE</a>
+					</li>
+				</ul>
+			</div>
+		</nav>
+		<div class"container-fluid">
+			<div class="row mt-4 justify-content-left">
+				<div class="col mx-3">
+					<img src="{{  url_for('static', filename='db_structure.png')}}" alt="ERD Schema">
+				</div>
+			</div>
+		</div>
+
+		
+
+		<!-- Main Content -->
+		<div class="container-fluid">
+
+			<!-- PRODUCT -->
+			<div class="row mt-4 justify-content-left">
+				<div class="col mx-3">
+					<div class="card">
+						<div class="card-body">
+							<h5 class="card-title">Product CRUD</h5>
+							<h6 class="card-subtitle mb-2 text-muted">Requires JWT Token auth as admin</h6>
+							<p><span style='font-weight: 675;'>GET /api/admin/products</span> Return JSON with all products. <a href="https://flask-shop-application-api.herokuapp.com/api/admin/products" class="card-link">https://flask-shop-application-api.herokuapp.com/api/admin/products</a></p>
+							<p style="margin-bottom: 0;"><span style='font-weight: 675;'>POST /api/admin/products</span> Post new product from JSON <a href="https://flask-shop-application-api.herokuapp.com/api/admin/products" class="card-link">https://flask-shop-application-api.herokuapp.com/api/admin/products</a></p>
+							<p style="font-style: italic;">{"product_name": "product_name", "product_description": "product_description", "price": "500", "stock": "stock", "images_url": "images_url", "category_id": "category_id"}</p> 
+							<p><span style='font-weight: 675;'>GET /api/admin/product/id</span> Return JSON selected product. <a href="https://flask-shop-application-api.herokuapp.com/api/admin/product/id" class="card-link">https://flask-shop-application-api.herokuapp.com/api/admin/product/id</a></p>
+							<p style="margin-bottom: 0;"><span style='font-weight: 675;'>PUT /api/admin/product/id</span> Update selected product from JSON <a href="https://flask-shop-application-api.herokuapp.com/api/admin/product/id" class="card-link">https://flask-shop-application-api.herokuapp.com/api/admin/product/id</a></p>
+							<p style="font-style: italic;">{"product_name": "product_name", "product_description": "product_description", "price": "500", "stock": "stock", "images_url": "images_url", "category_id": "category_id"}</p>
+							<p><span style='font-weight: 675;'>DELETE /api/admin/product/id</span> Delete selected product. <a href="https://flask-shop-application-api.herokuapp.com/api/admin/product/id" class="card-link">https://flask-shop-application-api.herokuapp.com/api/admin/product/id</a></p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- User -->
+			<div class="row mt-4 justify-content-left">
+				<div class="col mx-3">
+					<div class="card">
+						<div class="card-body">
+							<h5 class="card-title">User CRUD</h5>
+							<h6 class="card-subtitle mb-2 text-muted">Requires JWT Token auth as admin</h6>
+							<p><span style='font-weight: 675;'>GET /api/admin/users</span> Return JSON with all users. <a href="https://flask-shop-application-api.herokuapp.com/api/admin/users" class="card-link">https://flask-shop-application-api.herokuapp.com/api/admin/users</a></p>
+							<p style="margin-bottom: 0;"><span style='font-weight: 675;'>POST /api/admin/users</span> Post new user and userdetail from JSON <a href="https://flask-shop-application-api.herokuapp.com/api/admin/users" class="card-link">https://flask-shop-application-api.herokuapp.com/api/admin/users</a></p>
+							<p style="font-style: italic;">{"email": "email", "password": "password", "role": "role", "first_name": "first_name", "last_name": "last_name", "profile_picture": "profile_picture", "address": "address", "city": "city", "state": "state", "postcode": "postcode", "country": "country", "phone": "phone"}</p> 
+							<p><span style='font-weight: 675;'>GET /api/admin/user/id</span> Return JSON selected user. <a href="https://flask-shop-application-api.herokuapp.com/api/admin/user/id" class="card-link">https://flask-shop-application-api.herokuapp.com/api/admin/user/id</a></p>
+							<p style="margin-bottom: 0;"><span style='font-weight: 675;'>PUT /api/admin/user/id</span> Update selected user and userdetail from JSON <a href="https://flask-shop-application-api.herokuapp.com/api/admin/user/id" class="card-link">https://flask-shop-application-api.herokuapp.com/api/admin/user/id</a></p>
+							<p style="font-style: italic;">{"email": "email", "password": "password", "role": "role", "first_name": "first_name", "last_name": "last_name", "profile_picture": "profile_picture", "address": "address", "city": "city", "state": "state", "postcode": "postcode", "country": "country", "phone": "phone"}</p>
+							<p><span style='font-weight: 675;'>DELETE /api/admin/user/id</span> Delete selected user. <a href="https://flask-shop-application-api.herokuapp.com/api/admin/user/id" class="card-link">https://flask-shop-application-api.herokuapp.com/api/admin/user/id</a></p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		<!-- Bootstrap core JavaScript -->
+		<script
+			src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+			integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+			crossorigin="anonymous"
+		></script>
+		<script
+			src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+			integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+			crossorigin="anonymous"
+		></script>
+		<script
+			src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+			integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+			crossorigin="anonymous"
+		></script>
+	</body>
+</html>
