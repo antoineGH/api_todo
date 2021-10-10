@@ -82,7 +82,51 @@ def postUser(email, password, first_name, last_name):
         return jsonify(user=user.serialize)
     except:
         db.session.rollback()
-        return jsonify({"message": "Couln't add user to DB"}), 400
+        return jsonify({"message": "Couldn't add user to DB"}), 400
+
+def getUser(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"message": "User doesn\'t exist"}), 404
+    return jsonify(user=user.serialize)
+
+def updateUser(user_id, email, password, first_name, last_name):
+    user = User.query.get(user_id)
+    print(user_id)
+    if not user:
+        return jsonify({"message": 'User doesn\'t exist'}), 404
+    if email:
+        existing_email = User.query.filter_by(email=email).first()
+        if existing_email:
+            if int(existing_email.user_id != int(user_id)):
+                return jsonify({"message": "Email already existing"}), 404
+        user.email = email
+    if password:
+        hashedPassword = bcrypt.generate_password_hash(password).decode('utf-8')
+        user.password = hashedPassword
+    if first_name:
+        user.first_name = first_name
+    if last_name:
+        user.last_name = last_name
+    db.session.add(user)
+    try:
+        db.session.commit()
+        return jsonify(user=user.serialize)
+    except:
+        db.session.rollback()
+        return jsonify({"message": "Couldn't add user to DB"})
+
+def deleteUser(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"message": "User doesn't exist"}), 404
+    db.session.delete(user)
+    try:
+        db.session.commit()
+        return make_response(jsonify({"message": 'Removed user with ID: {}'.format(user_id)}))
+    except:
+        db.session.rollback()
+        return jsonify({"message": "Couldn't add user to DB"}), 400
 
 # --- INFO: ROUTES ---
 
@@ -111,7 +155,27 @@ def adminUsers():
         if not last_name: 
             return jsonify({"message": 'Missing last name in JSON'})
         return postUser(email, password, first_name, last_name)
-    
+
+@app.route('/api/admin/user/<int:user_id>', methods=['GET', 'PUT', 'DELETE']) 
+def adminUser(user_id):
+    if not user_id:
+        return jsonify({"message": "Missing user_id in request"}), 404
+
+    if request.method == 'GET':
+        return getUser(user_id)
+
+    if request.method == 'PUT':
+        if not request.is_json:
+            return jsonify({"message": "Missing JSON in request"}), 400
+        content = request.get_json(force=True)
+        email = content['email'] if 'email' in content.keys() else ''
+        password = content['password'] if 'password' in content.keys() else ''
+        first_name = content['first_name'] if 'first_name' in content.keys() else ''
+        last_name = content['last_name'] if 'last_name' in content.keys() else ''
+        return updateUser(user_id, email, password, first_name, last_name)
+
+    if request.method == 'DELETE':
+        return deleteUser(user_id)
 
 if __name__ == '__main__':
     app.run(debug=True)
