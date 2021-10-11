@@ -209,7 +209,6 @@ def getTodosUser(user_id):
 
 def isAdmin():
     current_user = get_jwt_identity()
-    print(current_user)
     return current_user == 'antoine.ratat@gmail.com'
 
 def login(email, password):
@@ -227,7 +226,6 @@ def login(email, password):
     ret = {
         'access_token': create_access_token(identity=email),
     }
-    print(ret)
     return jsonify(ret), 201
 
 def register(email, first_name, last_name, password):
@@ -252,7 +250,6 @@ def add_claims_to_access_token(identity):
         'email': user.email,
         'first_name' : user.first_name,
         'last_name' : user.last_name,
-        'date_created' : user.date_created,
     }
 
 # --- INFO: USER FUNCTIONS --- 
