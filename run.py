@@ -1,13 +1,10 @@
-from datetime import date, datetime
 from flask import Flask, jsonify, abort, make_response, request, render_template, url_for, redirect
-from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
+from flask_bcrypt import Bcrypt
 from flask_cors import CORS
+from datetime import datetime
 import json
-
-from sqlalchemy.sql.expression import null
-from sqlalchemy.sql.sqltypes import Boolean
 
 
 # # --- INFO: LOAD CONFIG VARIABLES ---
