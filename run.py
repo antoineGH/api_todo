@@ -308,6 +308,44 @@ def deleteUserTodo(todo_id, email):
         db.session.rollback()
         return jsonify({"message": "Couldn't delete todo to DB"}), 400
 
+def getUserUser(email):
+    user = User.query.filter_by(email=email).first()
+    if not user: 
+        return jsonify({"message": "User not found"}), 404
+    return jsonify(user=user.serialize)
+
+def updateUserUser(password, first_name, last_name, email):
+    user = User.query.filter_by(email=email).first()
+    if not user: 
+        return jsonify({"message": "User not found"}), 404
+    if first_name:
+        user.first_name = first_name
+    if last_name:
+        user.last_name = last_name
+    if password:
+        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+        user.password = hashed_password
+    db.session.add(user)
+    try:
+        db.session.commit()
+        return jsonify(user=user.serialize)
+    except:
+        db.session.rollback()
+        return jsonify({"message": "Couldn't add user to DB"})
+
+
+def deleteUserUser(email):
+    user = User.query.filter_by(email=email).first()
+    if not user: 
+        return jsonify({"message": "User not found"}), 404
+    db.session.delete(user)
+    try:
+        db.session.commit()
+        return make_response(jsonify({"message": '{} removed'.format(email)})) 
+    except:
+        db.session.rollback()
+        return jsonify({"message": "Couldn't delete user"}), 400
+
 # --- INFO: ADMIN ROUTES ---
 
 @app.route('/')
@@ -499,6 +537,27 @@ def userTodo(todo_id):
     if request.method == 'DELETE':
         return deleteUserTodo(todo_id, email)
 
+@app.route('/api/user', methods=['GET', 'PUT', 'DELETE'])
+@jwt_required
+def userUser():
+    email = get_jwt_identity()
+    if not email:
+        return jsonify({'message': 'Missing Email in Token'}), 400
+
+    if request.method == 'GET':
+        return getUserUser(email)
+
+    if request.method == 'PUT':
+        if not request.is_json:
+            return jsonify({"message": "Missing JSON in request"}), 400
+        content = request.get_json(force=True)
+        first_name = content['first_name'] if 'first_name' in content.keys() else ''
+        last_name = content['last_name'] if 'last_name' in content.keys() else ''
+        password = content['password'] if 'password' in content.keys() else ''
+        return updateUserUser(password, first_name, last_name, email)
+
+    if request.method == 'DELETE':
+        return deleteUserUser(email)
 
 if __name__ == '__main__':
     app.run(debug=True) 
