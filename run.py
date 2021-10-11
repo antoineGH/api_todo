@@ -259,6 +259,17 @@ def postUserTodo(todo_description, completed, email):
         db.session.rollback()
         return jsonify({"message": "Couldn't add todo to DB"}), 400
 
+def getUserTodo(todo_id, email):
+    user = User.query.filter_by(email=email).first()
+    if not user: 
+        return jsonify({"message": "User not found"}), 404
+    todo = Todo.query.get(todo_id)
+    if not todo: 
+        return jsonify({"message": "Todo not found"}), 404
+    if todo.user_id != user.user_id:
+        return jsonify({"message": "Unauthorized Access"}), 401
+    return jsonify(todo=todo.serialize)
+
 # --- INFO: ADMIN ROUTES ---
 
 @app.route('/')
@@ -421,12 +432,36 @@ def userTodos():
         content = request.get_json(force=True)
         todo_description = content.get("todo_description", None)
         completed = content.get("completed", None)
-        user_id = content.get("user_id", None)
         if not todo_description:
             return jsonify({"message": "Missing todo_description"}), 400
-        if not user_id:
-            return jsonify({"message": "Missing user_id"}), 400
         return postUserTodo(todo_description, completed, email)
+
+@app.route('/api/todo/<int:todo_id>', methods=['GET', 'PUT', 'DELETE']) 
+@jwt_required
+def userTodo(todo_id):
+
+    if not todo_id:
+        return jsonify({"message": "Missing todo_id in request"}), 404
+
+    email = get_jwt_identity()
+    if not email: 
+        return jsonify({"message": "Missing Email in Token"}), 400
+
+    if request.method == 'GET':
+        return getUserTodo(todo_id, email)
+
+    if request.method == 'PUT':
+        if not request.is_json:
+            return jsonify({"message": "Missing JSON in request"}), 400
+        content = request.get_json(force=True)
+        todo_description = content['todo_description'] if 'todo_description' in content.keys() else ''
+        completed = content['completed'] if 'completed' in content.keys() else ''
+        user_id = content['user_id'] if 'user_id' in content.keys() else ''
+        return updateTodo(todo_id, todo_description, completed, user_id)
+
+    if request.method == 'DELETE':
+        return deleteTodo(todo_id)
+
 
 if __name__ == '__main__':
     app.run(debug=True) 
