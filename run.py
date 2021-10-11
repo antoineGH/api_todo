@@ -1,9 +1,10 @@
 from flask import Flask, jsonify, abort, make_response, request, render_template, url_for, redirect
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, jwt_refresh_token_required, create_refresh_token, get_jwt_identity, get_jwt_claims
+import datetime
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
-from datetime import datetime
 import json
 
 
@@ -14,11 +15,15 @@ with open('config.json') as config_file:
 # --- INFO: APP CONFIGURATION ---
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = config['DATABASE_URL']
+app.config['SQLALCHEMY_DATABASE_URI'] = config.get('DATABASE_URL')
 app.config['SECRET_KEY'] =  config.get('SECRET_KEY')
+app.config['JWT_SECRET_KEY'] = config.get('JWT_SECRET_KEY')
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(days=7)
+app.config['JWT_REFRESH_TOKEN_EXPIRES'] = datetime.timedelta(days=7)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
+jwt = JWTManager(app)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # --- INFO: DATABASE MODEL ---
@@ -29,7 +34,7 @@ class User(db.Model):
     password = Column(String(200), nullable=False)
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(200), nullable=False)
-    date_created = Column(DateTime, nullable=False, default=datetime.utcnow)
+    date_created = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
 
     def __repr__(self):
         return "- USER - user_id: {}, email: {}, first_name: {}, last_name: {}, date_created: {}".format(self.user_id, self.email, self.first_name, self.last_name, self.date_created)
@@ -200,16 +205,58 @@ def getTodosUser(user_id):
     todos = Todo.query.filter_by(user_id=user_id).all()
     return jsonify(todos=[todo.serialize for todo in todos])
 
-def getTodosCompletedUser(user_id):
-    todos = Todo.query.filter_by(user_id=user_id).all()
-    return jsonify(todos=[todo.serializeCompleted for todo in todos])
+# --- INFO: AUTH FUNCTIONS --- 
 
-def getTodosNotCompletedUser(user_id):
-    todos = Todo.query.filter_by(user_id=user_id).all()
-    return jsonify(todos=[todo.serializeNotCompleted for todo in todos])
+def isAdmin():
+    current_user = get_jwt_identity()
+    print(current_user)
+    return current_user == 'antoine.ratat@gmail.com'
 
+def login(email, password):
+    if not email: 
+        return jsonify({"message": "Missing Email"}), 400
+    if not password: 
+        return jsonify({"message": "Missing Password"}), 400
+    user = User.query.filter_by(email=email).first()
+    if not user: 
+        return jsonify({"message": "User not found"}), 404
+    if user.password == '':
+        return jsonify({"message": "Account not active, Set a password"}), 401
+    if not bcrypt.check_password_hash(user.password, password):
+        return jsonify({"message": "Bad email or password"}), 401
+    ret = {
+        'access_token': create_access_token(identity=email),
+    }
+    print(ret)
+    return jsonify(ret), 201
+
+def register(email, first_name, last_name, password):
+    userExisting = User.query.filter_by(email=email).first()
+    if userExisting:
+        return jsonify({'message': 'User already exists'}), 400
+    hashedPassword = bcrypt.generate_password_hash(password).decode('utf-8')
+    user = User(email=email, password=hashedPassword, first_name=first_name, last_name=last_name)
+    db.session.add(user)
+    try:
+        db.session.commit()
+        return jsonify(user=user.serialize)
+    except:
+        db.session.rollback()
+        return jsonify({"message": "Couldn't add user to DB"}), 400
+
+@jwt.user_claims_loader
+def add_claims_to_access_token(identity):
+    user = User.query.filter_by(email=identity).first()
+    return {
+        'user_id' : user.user_id,
+        'email': user.email,
+        'first_name' : user.first_name,
+        'last_name' : user.last_name,
+        'date_created' : user.date_created,
+    }
 
 # --- INFO: USER FUNCTIONS --- 
+
 
 # --- INFO: ADMIN ROUTES ---
 
@@ -218,7 +265,10 @@ def home():
     return render_template('documentation.html', title='Documentation')
 
 @app.route('/api/admin/users', methods=['GET', 'POST'])
+@jwt_required
 def adminUsers():
+    if not isAdmin():
+        return jsonify({'message': "Unauthorized Admin only"}), 403 
     if request.method == 'GET':
         return getUsers()
     if request.method == 'POST':
@@ -240,7 +290,11 @@ def adminUsers():
         return postUser(email, password, first_name, last_name)
 
 @app.route('/api/admin/user/<int:user_id>', methods=['GET', 'PUT', 'DELETE']) 
+@jwt_required
 def adminUser(user_id):
+    if not isAdmin():
+        return jsonify({'message': "Unauthorized Admin only"}), 403 
+
     if not user_id:
         return jsonify({"message": "Missing user_id in request"}), 404
 
@@ -261,7 +315,11 @@ def adminUser(user_id):
         return deleteUser(user_id)
 
 @app.route('/api/admin/todos', methods=['GET', 'POST'])
+@jwt_required
 def todos():
+    if not isAdmin():
+        return jsonify({'message': "Unauthorized Admin only"}), 403 
+
     if request.method == 'GET':
         return getTodos()
     if request.method == 'POST':
@@ -280,7 +338,11 @@ def todos():
         return postTodo(todo_description, completed, user_id)
 
 @app.route('/api/admin/todo/<int:todo_id>', methods=['GET', 'PUT', 'DELETE']) 
+@jwt_required
 def todo(todo_id):
+    if not isAdmin():
+        return jsonify({'message': "Unauthorized Admin only"}), 403 
+
     if not todo_id:
         return jsonify({"message": "Missing todo_id in request"}), 404
 
@@ -300,24 +362,47 @@ def todo(todo_id):
         return deleteTodo(todo_id)
 
 @app.route('/api/admin/todo/user/<int:user_id>', methods=['GET'])
+@jwt_required
 def todosUser(user_id):
+    if not isAdmin():
+        return jsonify({'message': "Unauthorized Admin only"}), 403 
+
     if not user_id:
         return jsonify({"message": "Missing user_id in request"}), 404
     return getTodosUser(user_id)
 
-@app.route('/api/admin/user/completed/<int:user_id>', methods=['GET'])
-def todosUserCompleted(user_id):
-    if not user_id:
-        return jsonify({"message": "Missing user_id in request"}), 404
-    return getTodosCompletedUser(user_id)
-
-@app.route('/api/admin/user/notcompleted/<int:user_id>', methods=['GET'])
-def todosUserNotCompleted(user_id):
-    if not user_id:
-        return jsonify({"message": "Missing user_id in request"}), 404
-    return getTodosNotCompletedUser(user_id)
-
 # --- INFO: USER ROUTES ---
 
+@app.route('/api/login', methods=['POST'])
+def user_login():
+    if not request.is_json: 
+        return jsonify({"message": "Missing JSON in request"}), 400
+    content = request.get_json(force=True)
+    email = content.get("email", None)
+    password = content.get("password", None)
+    return login(email, password)
+
+@app.route('/api/register', methods=['POST'])
+def user_register():
+    if not request.is_json: 
+        return jsonify({"message": "Missing JSON in request"}), 400
+
+    content = request.get_json(force=True)
+    email = content.get("email", None)
+    password = content.get("password", None)
+    first_name = content.get("first_name", None)
+    last_name = content.get("last_name", None)
+
+    if not email:
+        return jsonify({"message": "Missing Email"}), 400
+    if not password:
+        return jsonify({"message": "Missing Password"}), 400
+    if not first_name:
+        return jsonify({"message": "Missing First name"}), 400
+    if not last_name:
+        return jsonify({"message": "Missing Last name"}), 400
+
+    return register(email, first_name, last_name, password)
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True) 
