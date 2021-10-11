@@ -65,24 +65,53 @@ class Todo(db.Model):
             'todo_description': self.todo_description,
             'completed': self.completed,
         }
-    
-    @property
-    def serializeCompleted(self):
-        if self.completed:
-            return {
-            'todo_id': self.todo_id,
-            'todo_description': self.todo_description,
-            'completed': self.completed,
-        }
 
-    @property
-    def serializeNotCompleted(self):
-        if not self.completed:
-            return {
-            'todo_id': self.todo_id,
-            'todo_description': self.todo_description,
-            'completed': self.completed,
-        }
+# --- INFO: AUTH FUNCTIONS --- 
+
+def isAdmin():
+    current_user = get_jwt_identity()
+    return current_user == 'antoine.ratat@gmail.com'
+
+def login(email, password):
+    if not email: 
+        return jsonify({"message": "Missing Email"}), 400
+    if not password: 
+        return jsonify({"message": "Missing Password"}), 400
+    user = User.query.filter_by(email=email).first()
+    if not user: 
+        return jsonify({"message": "User not found"}), 404
+    if user.password == '':
+        return jsonify({"message": "Account not active, Set a password"}), 401
+    if not bcrypt.check_password_hash(user.password, password):
+        return jsonify({"message": "Bad email or password"}), 401
+    ret = {
+        'access_token': create_access_token(identity=email),
+    }
+    return jsonify(ret), 201
+
+def register(email, first_name, last_name, password):
+    userExisting = User.query.filter_by(email=email).first()
+    if userExisting:
+        return jsonify({'message': 'User already exists'}), 400
+    hashedPassword = bcrypt.generate_password_hash(password).decode('utf-8')
+    user = User(email=email, password=hashedPassword, first_name=first_name, last_name=last_name)
+    db.session.add(user)
+    try:
+        db.session.commit()
+        return jsonify(user=user.serialize)
+    except:
+        db.session.rollback()
+        return jsonify({"message": "Couldn't add user to DB"}), 400
+
+@jwt.user_claims_loader
+def add_claims_to_access_token(identity):
+    user = User.query.filter_by(email=identity).first()
+    return {
+        'user_id' : user.user_id,
+        'email': user.email,
+        'first_name' : user.first_name,
+        'last_name' : user.last_name,
+    }
 
 # --- INFO: ADMIN FUNCTIONS --- 
 
@@ -112,6 +141,7 @@ def getUser(user_id):
 
 def updateUser(user_id, email, password, first_name, last_name):
     user = User.query.get(user_id)
+    print(user)
     if not user:
         return jsonify({"message": 'User doesn\'t exist'}), 404
     if email:
@@ -177,14 +207,14 @@ def updateTodo(todo_id, todo_description, completed, user_id):
         return jsonify({'message': 'No user associated'}), 400
     if todo_description:
         todo.todo_description = todo_description
-    if completed:
+    if completed != None:
         todo.completed = completed
     if user_id:
         todo.user_id = user_id
     db.session.add(todo)
     try:
         db.session.commit()
-        return jsonify(user=user.serialize)
+        return jsonify(todo=todo.serialize)
     except:
         db.session.rollback()
         return jsonify({"message": "Couldn't add user to DB"})
@@ -205,55 +235,29 @@ def getTodosUser(user_id):
     todos = Todo.query.filter_by(user_id=user_id).all()
     return jsonify(todos=[todo.serialize for todo in todos])
 
-# --- INFO: AUTH FUNCTIONS --- 
+# --- INFO: USER FUNCTIONS --- 
 
-def isAdmin():
-    current_user = get_jwt_identity()
-    return current_user == 'antoine.ratat@gmail.com'
-
-def login(email, password):
-    if not email: 
-        return jsonify({"message": "Missing Email"}), 400
-    if not password: 
-        return jsonify({"message": "Missing Password"}), 400
+def getUserTodos(email):
     user = User.query.filter_by(email=email).first()
     if not user: 
         return jsonify({"message": "User not found"}), 404
-    if user.password == '':
-        return jsonify({"message": "Account not active, Set a password"}), 401
-    if not bcrypt.check_password_hash(user.password, password):
-        return jsonify({"message": "Bad email or password"}), 401
-    ret = {
-        'access_token': create_access_token(identity=email),
-    }
-    return jsonify(ret), 201
+    todos = Todo.query.filter_by(user_id=user.user_id).all()
+    if not todos: 
+        return jsonify({"message": "Todos not found"}), 404
+    return jsonify(todos=[todo.serialize for todo in todos])
 
-def register(email, first_name, last_name, password):
-    userExisting = User.query.filter_by(email=email).first()
-    if userExisting:
-        return jsonify({'message': 'User already exists'}), 400
-    hashedPassword = bcrypt.generate_password_hash(password).decode('utf-8')
-    user = User(email=email, password=hashedPassword, first_name=first_name, last_name=last_name)
-    db.session.add(user)
+def postUserTodo(todo_description, completed, email):
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({'message': 'No user associated'}), 400
+    todo = Todo(todo_description=todo_description, completed=completed, user_id=user.user_id)
+    db.session.add(todo)
     try:
         db.session.commit()
-        return jsonify(user=user.serialize)
+        return jsonify(todo=todo.serialize)
     except:
         db.session.rollback()
-        return jsonify({"message": "Couldn't add user to DB"}), 400
-
-@jwt.user_claims_loader
-def add_claims_to_access_token(identity):
-    user = User.query.filter_by(email=identity).first()
-    return {
-        'user_id' : user.user_id,
-        'email': user.email,
-        'first_name' : user.first_name,
-        'last_name' : user.last_name,
-    }
-
-# --- INFO: USER FUNCTIONS --- 
-
+        return jsonify({"message": "Couldn't add todo to DB"}), 400
 
 # --- INFO: ADMIN ROUTES ---
 
@@ -353,7 +357,7 @@ def todo(todo_id):
         todo_description = content['todo_description'] if 'todo_description' in content.keys() else ''
         completed = content['completed'] if 'completed' in content.keys() else ''
         user_id = content['user_id'] if 'user_id' in content.keys() else ''
-        return updateUser(todo_id, todo_description, completed, user_id)
+        return updateTodo(todo_id, todo_description, completed, user_id)
 
     if request.method == 'DELETE':
         return deleteTodo(todo_id)
@@ -400,6 +404,29 @@ def user_register():
         return jsonify({"message": "Missing Last name"}), 400
 
     return register(email, first_name, last_name, password)
+
+@app.route('/api/todos', methods=['GET', 'POST'])
+@jwt_required
+def userTodos():
+    email = get_jwt_identity()
+    if not email: 
+        return jsonify({"message": "Missing Email in Token"}), 400
+    
+    if request.method == 'GET':
+        return getUserTodos(email)
+
+    if request.method == 'POST':
+        if not request.is_json:
+            return jsonify({"message": "Missing JSON in request"}), 400
+        content = request.get_json(force=True)
+        todo_description = content.get("todo_description", None)
+        completed = content.get("completed", None)
+        user_id = content.get("user_id", None)
+        if not todo_description:
+            return jsonify({"message": "Missing todo_description"}), 400
+        if not user_id:
+            return jsonify({"message": "Missing user_id"}), 400
+        return postUserTodo(todo_description, completed, email)
 
 if __name__ == '__main__':
     app.run(debug=True) 
