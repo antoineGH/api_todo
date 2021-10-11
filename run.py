@@ -270,6 +270,26 @@ def getUserTodo(todo_id, email):
         return jsonify({"message": "Unauthorized Access"}), 401
     return jsonify(todo=todo.serialize)
 
+def updateUserTodo(todo_id, todo_description, completed, user_id, email):
+    pass
+
+def deleteUserTodo(todo_id, email):
+    user = User.query.filter_by(email=email).first()
+    if not user: 
+        return jsonify({"message": "User not found"}), 404
+    todo = Todo.query.get(todo_id)
+    if not todo: 
+        return jsonify({"message": "Todo not found"}), 404
+    if todo.user_id != user.user_id:
+        return jsonify({"message": "Unauthorized Access"}), 401
+    db.session.delete(todo)
+    try:
+        db.session.commit()
+        return make_response(jsonify({"message": 'Removed todo with ID: {}'.format(todo_id)}))
+    except:
+        db.session.rollback()
+        return jsonify({"message": "Couldn't delete todo to DB"}), 400
+
 # --- INFO: ADMIN ROUTES ---
 
 @app.route('/')
@@ -457,10 +477,10 @@ def userTodo(todo_id):
         todo_description = content['todo_description'] if 'todo_description' in content.keys() else ''
         completed = content['completed'] if 'completed' in content.keys() else ''
         user_id = content['user_id'] if 'user_id' in content.keys() else ''
-        return updateTodo(todo_id, todo_description, completed, user_id)
+        return updateUserTodo(todo_id, todo_description, completed, user_id, email)
 
     if request.method == 'DELETE':
-        return deleteTodo(todo_id)
+        return deleteUserTodo(todo_id, email)
 
 
 if __name__ == '__main__':
