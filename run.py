@@ -7,7 +7,6 @@ from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 import json
 
-
 # # --- INFO: LOAD CONFIG VARIABLES ---
 with open('config.json') as config_file:
     config = json.load(config_file)
@@ -332,7 +331,6 @@ def updateUserUser(password, first_name, last_name, email):
     except:
         db.session.rollback()
         return jsonify({"message": "Couldn't add user to DB"})
-
 
 def deleteUserUser(email):
     user = User.query.filter_by(email=email).first()
