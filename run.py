@@ -8,19 +8,23 @@ from flask_cors import CORS
 import json
 import os
 
-# with open('config.json') as config_file:
-#     config = json.load(config_file)
+with open('config.json') as config_file:
+    config = json.load(config_file)
 
-# app.config['SQLALCHEMY_DATABASE_URI'] = config.get('DATABASE_URL')
-# app.config['SECRET_KEY'] =  config.get('SECRET_KEY')
-# app.config['JWT_SECRET_KEY'] = config.get('JWT_SECRET_KEY')
+
 
 # --- INFO: APP CONFIGURATION ---
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
-app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
+
+app.config['SQLALCHEMY_DATABASE_URI'] = config.get('DATABASE_URL')
+app.config['SECRET_KEY'] =  config.get('SECRET_KEY')
+app.config['JWT_SECRET_KEY'] = config.get('JWT_SECRET_KEY')
+
+# app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+# app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+# app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
+
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(days=7)
 app.config['JWT_REFRESH_TOKEN_EXPIRES'] = datetime.timedelta(days=7)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -242,20 +246,14 @@ def getTodosUser(user_id):
 
 # --- INFO: USER FUNCTIONS --- 
 
-def getUserTodos(email):
-    user = User.query.filter_by(email=email).first()
-    if not user: 
-        return jsonify({"message": "User not found"}), 404
-    todos = Todo.query.filter_by(user_id=user.user_id).all()
+def getUserTodos(user_id):
+    todos = Todo.query.filter_by(user_id=user_id).all()
     if not todos: 
         return jsonify({"message": "Todos not found"}), 404
     return jsonify(todos=[todo.serialize for todo in todos])
 
-def postUserTodo(todo_description, completed, email):
-    user = User.query.filter_by(email=email).first()
-    if not user:
-        return jsonify({'message': 'No user associated'}), 400
-    todo = Todo(todo_description=todo_description, completed=completed, user_id=user.user_id)
+def postUserTodo(todo_description, completed, user_id):
+    todo = Todo(todo_description=todo_description, completed=completed, user_id=user_id)
     db.session.add(todo)
     try:
         db.session.commit()
@@ -264,8 +262,8 @@ def postUserTodo(todo_description, completed, email):
         db.session.rollback()
         return jsonify({"message": "Couldn't add todo to DB"}), 400
 
-def getUserTodo(todo_id, email):
-    user = User.query.filter_by(email=email).first()
+def getUserTodo(todo_id, user_id):
+    user = User.query.get(user_id)
     if not user: 
         return jsonify({"message": "User not found"}), 404
     todo = Todo.query.get(todo_id)
@@ -275,14 +273,11 @@ def getUserTodo(todo_id, email):
         return jsonify({"message": "Unauthorized Access"}), 401
     return jsonify(todo=todo.serialize)
 
-def updateUserTodo(todo_id, todo_description, completed, email):
-    user = User.query.filter_by(email=email).first()
-    if not user: 
-        return jsonify({"message": "User not found"}), 404
+def updateUserTodo(todo_id, todo_description, completed, user_id):
     todo = Todo.query.get(todo_id)
     if not todo: 
         return jsonify({"message": "Todo not found"}), 404
-    if todo.user_id != user.user_id:
+    if todo.user_id != user_id:
         return jsonify({"message": "Unauthorized Access"}), 401
     if todo_description:
         todo.todo_description = todo_description
@@ -296,14 +291,11 @@ def updateUserTodo(todo_id, todo_description, completed, email):
         db.session.rollback()
         return jsonify({"message": "Couldn't add user to DB"})
 
-def deleteUserTodo(todo_id, email):
-    user = User.query.filter_by(email=email).first()
-    if not user: 
-        return jsonify({"message": "User not found"}), 404
+def deleteUserTodo(todo_id, user_id):
     todo = Todo.query.get(todo_id)
     if not todo: 
         return jsonify({"message": "Todo not found"}), 404
-    if todo.user_id != user.user_id:
+    if todo.user_id != user_id:
         return jsonify({"message": "Unauthorized Access"}), 401
     db.session.delete(todo)
     try:
@@ -313,14 +305,14 @@ def deleteUserTodo(todo_id, email):
         db.session.rollback()
         return jsonify({"message": "Couldn't delete todo to DB"}), 400
 
-def getUserUser(email):
-    user = User.query.filter_by(email=email).first()
+def getUserUser(user_id):
+    user = User.query.get(user_id)
     if not user: 
         return jsonify({"message": "User not found"}), 404
     return jsonify(user=user.serialize)
 
-def updateUserUser(password, first_name, last_name, email):
-    user = User.query.filter_by(email=email).first()
+def updateUserUser(password, first_name, last_name, user_id):
+    user = User.query.get(user_id)
     if not user: 
         return jsonify({"message": "User not found"}), 404
     if first_name:
@@ -338,14 +330,14 @@ def updateUserUser(password, first_name, last_name, email):
         db.session.rollback()
         return jsonify({"message": "Couldn't add user to DB"})
 
-def deleteUserUser(email):
-    user = User.query.filter_by(email=email).first()
+def deleteUserUser(user_id):
+    user = User.query.get(user_id)
     if not user: 
         return jsonify({"message": "User not found"}), 404
     db.session.delete(user)
     try:
         db.session.commit()
-        return make_response(jsonify({"message": '{} removed'.format(email)})) 
+        return make_response(jsonify({"message": '{} removed'.format(user_id)})) 
     except:
         db.session.rollback()
         return jsonify({"message": "Couldn't delete user"}), 400
@@ -499,12 +491,14 @@ def user_register():
 @app.route('/api/todos', methods=['GET', 'POST'])
 @jwt_required
 def userTodos():
-    email = get_jwt_identity()
-    if not email: 
-        return jsonify({"message": "Missing Email in Token"}), 400
+    claims = get_jwt_claims()
+    user_id = claims.get('user_id')
+    
+    if not user_id:
+        return jsonify({'message': 'Missing user_id in Token'}), 400
     
     if request.method == 'GET':
-        return getUserTodos(email)
+        return getUserTodos(user_id)
 
     if request.method == 'POST':
         if not request.is_json:
@@ -514,7 +508,7 @@ def userTodos():
         completed = content.get("completed", None)
         if not todo_description:
             return jsonify({"message": "Missing todo_description"}), 400
-        return postUserTodo(todo_description, completed, email)
+        return postUserTodo(todo_description, completed, user_id)
 
 @app.route('/api/todo/<int:todo_id>', methods=['GET', 'PUT', 'DELETE']) 
 @jwt_required
@@ -523,12 +517,14 @@ def userTodo(todo_id):
     if not todo_id:
         return jsonify({"message": "Missing todo_id in request"}), 404
 
-    email = get_jwt_identity()
-    if not email: 
-        return jsonify({"message": "Missing Email in Token"}), 400
+    claims = get_jwt_claims()
+    user_id = claims.get('user_id')
+    
+    if not user_id:
+        return jsonify({'message': 'Missing user_id in Token'}), 400
 
     if request.method == 'GET':
-        return getUserTodo(todo_id, email)
+        return getUserTodo(todo_id, user_id)
 
     if request.method == 'PUT':
         if not request.is_json:
@@ -536,20 +532,22 @@ def userTodo(todo_id):
         content = request.get_json(force=True)
         todo_description = content['todo_description'] if 'todo_description' in content.keys() else ''
         completed = content['completed'] if 'completed' in content.keys() else ''
-        return updateUserTodo(todo_id, todo_description, completed, email)
+        return updateUserTodo(todo_id, todo_description, completed, user_id)
 
     if request.method == 'DELETE':
-        return deleteUserTodo(todo_id, email)
+        return deleteUserTodo(todo_id, user_id)
 
 @app.route('/api/user', methods=['GET', 'PUT', 'DELETE'])
 @jwt_required
 def userUser():
-    email = get_jwt_identity()
-    if not email:
-        return jsonify({'message': 'Missing Email in Token'}), 400
+    claims = get_jwt_claims()
+    user_id = claims.get('user_id')
+    
+    if not user_id:
+        return jsonify({'message': 'Missing user_id in Token'}), 400
 
     if request.method == 'GET':
-        return getUserUser(email)
+        return getUserUser(user_id)
 
     if request.method == 'PUT':
         if not request.is_json:
@@ -558,10 +556,10 @@ def userUser():
         first_name = content['first_name'] if 'first_name' in content.keys() else ''
         last_name = content['last_name'] if 'last_name' in content.keys() else ''
         password = content['password'] if 'password' in content.keys() else ''
-        return updateUserUser(password, first_name, last_name, email)
+        return updateUserUser(password, first_name, last_name, user_id)
 
     if request.method == 'DELETE':
-        return deleteUserUser(email)
+        return deleteUserUser(user_id)
 
 if __name__ == '__main__':
-    app.run(debug=False) 
+    app.run(debug=True) 
