@@ -208,6 +208,8 @@ def updateTodo(todo_id, todo_description, completed, user_id):
     todo = Todo.query.get(todo_id)
     if not user:
         return jsonify({'message': 'No user associated'}), 400
+    if not todo:
+        return jsonify({'message': 'No todo associated'}), 400
     if todo_description:
         todo.todo_description = todo_description
     if completed != None:
