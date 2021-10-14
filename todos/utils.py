@@ -54,9 +54,10 @@ def deleteUserTodo(todo_id, user_id):
     if todo.user_id != user_id:
         return jsonify({"message": "Unauthorized Access"}), 401
     db.session.delete(todo)
-    try:
-        db.session.commit()
-        return make_response(jsonify({"message": 'Removed todo with ID: {}'.format(todo_id)}))
-    except:
-        db.session.rollback()
-        return jsonify({"message": "Couldn't delete todo to DB"}), 400
+    return jsonify(True)
+    # try:
+    #     db.session.commit()
+    #     return make_response(jsonify({"message": 'Removed todo with ID: {}'.format(todo_id)}))
+    # except:
+    #     db.session.rollback()
+    #     return jsonify({"message": "Couldn't delete todo to DB"}), 400
