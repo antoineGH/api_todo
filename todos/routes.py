@@ -20,6 +20,7 @@ def userTodos():
         if not request.is_json:
             return jsonify({"message": "Missing JSON in request"}), 400
         content = request.get_json(force=True)
+        print(content)
         todo_description = content.get("todo_description", None)
         completed = content.get("completed", None)
         if not todo_description:
