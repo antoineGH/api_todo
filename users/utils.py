@@ -82,3 +82,4 @@ def deleteUserUser(user_id):
     # except:
     #     db.session.rollback()
     #     return jsonify({"message": "Couldn't delete user"}), 400
+
