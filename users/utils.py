@@ -78,7 +78,7 @@ def deleteUserUser(user_id):
     #     db.session.commit()
     #     # return make_response(jsonify({"message": '{} removed'.format(user_id)})) 
     #     return jsonify(user=user.serialize)
-    return jsonify(user=user.serialize)
+    return jsonify(True)
     # except:
     #     db.session.rollback()
     #     return jsonify({"message": "Couldn't delete user"}), 400
