@@ -46,10 +46,8 @@ def userTodo(todo_id):
         if not request.is_json:
             return jsonify({"message": "Missing JSON in request"}), 400
         content = request.get_json(force=True)
-        print('content {}'.format(content))
         todo_description = content['todo_description'] if 'todo_description' in content.keys() else ''
         completed = content['completed'] if 'completed' in content.keys() else False
-        print('completed {}'.format(completed))
         return updateUserTodo(todo_id, todo_description, completed, user_id)
 
     if request.method == 'DELETE':
