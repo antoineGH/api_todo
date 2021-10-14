@@ -51,7 +51,6 @@ def userUser():
         if not request.is_json:
             return jsonify({"message": "Missing JSON in request"}), 400
         content = request.get_json(force=True)
-        print(content)
         first_name = content['first_name'] if 'first_name' in content.keys() else ''
         last_name = content['last_name'] if 'last_name' in content.keys() else ''
         password = content['password'] if 'password' in content.keys() else ''
