@@ -51,6 +51,7 @@ def getUserUser(user_id):
     return jsonify(user=user.serialize)
 
 def updateUserUser(password, first_name, last_name, user_id):
+    print(password, first_name, last_name, user_id)
     user = User.query.get(user_id)
     if not user: 
         return jsonify({"message": "User not found"}), 404
