@@ -36,7 +36,7 @@ After running the server, consult Documentation at :
 
 Database schema:
 
-![DB Screenshot](https://templars.guru/app/github/todo_api/Todo%20DB.png)
+![DB Screenshot](https://github.com/antoineratat/github_docs/blob/main/todo_api/Todo%20DB.png?raw=true)
 
 ## Technologies<a name="technologies"></a>
 
